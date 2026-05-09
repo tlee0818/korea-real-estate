@@ -17,12 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Use default GITHUB_TOKEN. If this workflow cannot push to your
-          # protected main branch, go to Settings → Branches → Edit protection
-          # rule → "Allow specified actors to bypass required pull requests"
-          # and add "github-actions[bot]". Alternatively replace with a PAT:
-          #   token: ${{ secrets.PAT }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT required to push to a protected main branch.
+          # Create a fine-grained PAT (Contents: Read+Write) and store as
+          # repo secret named PAT.
+          token: ${{ secrets.PAT }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
