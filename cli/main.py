@@ -45,6 +45,7 @@ def _print_items(items: list[dict], title: str, output: str | None = None) -> No
 
     if output:
         import csv
+
         with open(output, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=items[0].keys())
             writer.writeheader()
@@ -76,7 +77,11 @@ def cmd_sales(ctx, region, month, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Land Sales — {region or DEFAULT_REGION_CODE} {month}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Land Sales — {region or DEFAULT_REGION_CODE} {month}",
+        output=output,
+    )
 
 
 @cli.command("commercial-sales")
@@ -94,7 +99,11 @@ def cmd_commercial_sales(ctx, region, month, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Commercial Sales — {region or DEFAULT_REGION_CODE} {month}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Commercial Sales — {region or DEFAULT_REGION_CODE} {month}",
+        output=output,
+    )
 
 
 @cli.command("permits")
@@ -114,7 +123,11 @@ def cmd_permits(ctx, region, from_date, to_date, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Building Permits — {region or DEFAULT_REGION_CODE}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Building Permits — {region or DEFAULT_REGION_CODE}",
+        output=output,
+    )
 
 
 @cli.command("zoning")
@@ -132,7 +145,9 @@ def cmd_zoning(ctx, region, dong, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Zoning — {region or DEFAULT_REGION_CODE}", output=output)
+    _print_items(
+        _extract_items(data), title=f"Zoning — {region or DEFAULT_REGION_CODE}", output=output
+    )
 
 
 @cli.command("appraised-value")
@@ -150,7 +165,11 @@ def cmd_appraised_value(ctx, region, year, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Appraised Value — {region or DEFAULT_REGION_CODE}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Appraised Value — {region or DEFAULT_REGION_CODE}",
+        output=output,
+    )
 
 
 @cli.command("standard-price")
@@ -168,7 +187,11 @@ def cmd_standard_price(ctx, region, year, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Standard Price — {region or DEFAULT_REGION_CODE}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Standard Price — {region or DEFAULT_REGION_CODE}",
+        output=output,
+    )
 
 
 @cli.command("building-ledger")
@@ -194,7 +217,11 @@ def cmd_building_ledger(ctx, region, parcel, ledger_type, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Building Ledger — {region or DEFAULT_REGION_CODE}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Building Ledger — {region or DEFAULT_REGION_CODE}",
+        output=output,
+    )
 
 
 @cli.command("price-index")
@@ -216,7 +243,11 @@ def cmd_price_index(ctx, region, index_type, from_ym, to_ym, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-    _print_items(_extract_items(data), title=f"Price Index ({index_type}) — {region or DEFAULT_REGION_CODE}", output=output)
+    _print_items(
+        _extract_items(data),
+        title=f"Price Index ({index_type}) — {region or DEFAULT_REGION_CODE}",
+        output=output,
+    )
 
 
 @cli.command("address-lookup")

@@ -18,14 +18,14 @@ from tests.conftest import (
     ZONING_XML,
 )
 
-_LAND_SALES_URL    = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
-_COMMERCIAL_URL    = "https://apis.data.go.kr/1613000/RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade"
-_PERMIT_URL        = "https://apis.data.go.kr/1613000/ArchPmsService/getApBasisOulnInfo"
-_ZONING_URL        = "https://apis.data.go.kr/1613000/LandUseService/getLandUseList"
-_APPRAISED_URL     = "https://apis.data.go.kr/1611000/nsdi/IndvdLandPriceService/wfs/IndvdLandPrice"
-_STANDARD_URL      = "https://apis.data.go.kr/1613000/PubLandPriceService/getPblcLandPriceList"
-_REGISTRY_URL      = "https://apis.data.go.kr/1613000/ArchPmsService/getApBdInfo"
-_MAP_URL           = "https://apis.data.go.kr/1613000/NSYDPnbldService/getNSYDPnbld"
+_LAND_SALES_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
+_COMMERCIAL_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade"
+_PERMIT_URL = "https://apis.data.go.kr/1613000/ArchPmsService/getApBasisOulnInfo"
+_ZONING_URL = "https://apis.data.go.kr/1613000/LandUseService/getLandUseList"
+_APPRAISED_URL = "https://apis.data.go.kr/1611000/nsdi/IndvdLandPriceService/wfs/IndvdLandPrice"
+_STANDARD_URL = "https://apis.data.go.kr/1613000/PubLandPriceService/getPblcLandPriceList"
+_REGISTRY_URL = "https://apis.data.go.kr/1613000/ArchPmsService/getApBdInfo"
+_MAP_URL = "https://apis.data.go.kr/1613000/NSYDPnbldService/getNSYDPnbld"
 
 
 @respx.mock

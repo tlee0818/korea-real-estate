@@ -29,8 +29,10 @@ def test_real_estate_price_index_injects_key_param():
 def test_real_estate_price_index_filters_none_params():
     route = respx.get(_URL).mock(return_value=httpx.Response(200, text=TRENDS_XML))
     RebClient().real_estate_price_index(
-        region_code="42820", index_type="land",
-        start_year_month=None, end_year_month=None,
+        region_code="42820",
+        index_type="land",
+        start_year_month=None,
+        end_year_month=None,
     )
     params = dict(route.calls[0].request.url.params)
     assert "startPeriod" not in params

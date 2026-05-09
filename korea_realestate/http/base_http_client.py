@@ -21,6 +21,7 @@ def _parse_response(raw: str) -> dict:
     if raw.startswith("<"):
         return xmltodict.parse(raw)
     import json
+
     return json.loads(raw)
 
 
@@ -52,7 +53,7 @@ class BaseHttpClient:
                     resp = client.get(url, params=params)
 
                 if resp.status_code in _RETRYABLE_STATUS:
-                    wait = 2 ** attempt
+                    wait = 2**attempt
                     logger.warning("HTTP %d — retrying in %ds", resp.status_code, wait)
                     time.sleep(wait)
                     attempt += 1
@@ -71,7 +72,7 @@ class BaseHttpClient:
                     raise APIResponseError(str(exc)) from exc
             except httpx.RequestError as exc:
                 last_exc = exc
-                wait = 2 ** attempt
+                wait = 2**attempt
                 logger.warning("Request error: %s — retrying in %ds", exc, wait)
                 time.sleep(wait)
 
@@ -90,7 +91,7 @@ class BaseHttpClient:
                     resp = await client.get(url, params=params)
 
                     if resp.status_code in _RETRYABLE_STATUS:
-                        wait = 2 ** attempt
+                        wait = 2**attempt
                         logger.warning("HTTP %d — retrying in %ds", resp.status_code, wait)
                         await asyncio.sleep(wait)
                         attempt += 1
@@ -109,7 +110,7 @@ class BaseHttpClient:
                         raise APIResponseError(str(exc)) from exc
                 except httpx.RequestError as exc:
                     last_exc = exc
-                    wait = 2 ** attempt
+                    wait = 2**attempt
                     logger.warning("Request error: %s — retrying in %ds", exc, wait)
                     await asyncio.sleep(wait)
 

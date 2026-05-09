@@ -1,6 +1,5 @@
 """HTTP client for https://www.reb.or.kr/r-one/openapi — one method per endpoint."""
 
-
 from .. import config
 from .base_http_client import BaseHttpClient
 
@@ -46,12 +45,15 @@ class RebClient(BaseHttpClient):
         """
         if index_type not in _TABLE_IDS:
             raise ValueError(f"index_type must be 'land' or 'housing', got {index_type!r}.")
-        return self._call(_PRICE_INDEX, _p(
-            tblId=_TABLE_IDS[index_type],
-            regionCode=region_code,
-            startPeriod=start_year_month,
-            endPeriod=end_year_month,
-            format="xml",
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _PRICE_INDEX,
+            _p(
+                tblId=_TABLE_IDS[index_type],
+                regionCode=region_code,
+                startPeriod=start_year_month,
+                endPeriod=end_year_month,
+                format="xml",
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )

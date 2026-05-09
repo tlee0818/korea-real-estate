@@ -275,7 +275,7 @@ REGION_CODES: dict[str, str] = {
 
 # Aliases for common name variations
 _ALIASES: dict[str, str] = {
-    "고성": "42820",       # defaults to 강원 고성군
+    "고성": "42820",  # defaults to 강원 고성군
     "속초": "42210",
     "양양": "42830",
     "인제": "42810",

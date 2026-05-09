@@ -1,19 +1,18 @@
 """HTTP client for https://apis.data.go.kr/ — one method per endpoint."""
 
-
 from .. import config
 from .base_http_client import BaseHttpClient
 
 _BASE = "https://apis.data.go.kr/"
 
-_LAND_SALES        = "1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
-_COMMERCIAL_SALES  = "1613000/RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade"
-_PERMIT_HISTORY    = "1613000/ArchPmsService/getApBasisOulnInfo"
-_ZONING            = "1613000/LandUseService/getLandUseList"
-_APPRAISED_VALUE   = "1611000/nsdi/IndvdLandPriceService/wfs/IndvdLandPrice"
-_STANDARD_PRICE    = "1613000/PubLandPriceService/getPblcLandPriceList"
+_LAND_SALES = "1613000/RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade"
+_COMMERCIAL_SALES = "1613000/RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade"
+_PERMIT_HISTORY = "1613000/ArchPmsService/getApBasisOulnInfo"
+_ZONING = "1613000/LandUseService/getLandUseList"
+_APPRAISED_VALUE = "1611000/nsdi/IndvdLandPriceService/wfs/IndvdLandPrice"
+_STANDARD_PRICE = "1613000/PubLandPriceService/getPblcLandPriceList"
 _BUILDING_REGISTRY = "1613000/ArchPmsService/getApBdInfo"
-_BUILDING_MAP      = "1613000/NSYDPnbldService/getNSYDPnbld"
+_BUILDING_MAP = "1613000/NSYDPnbldService/getNSYDPnbld"
 
 
 def _p(**kwargs) -> dict:
@@ -41,12 +40,16 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """토지 매매 실거래가 — land sale transactions for one calendar month."""
-        return self._call(_LAND_SALES, config.PUBLIC_DATA_API_KEY or "", _p(
-            LAWD_CD=region_code,
-            DEAL_YMD=year_month,
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _LAND_SALES,
+            config.PUBLIC_DATA_API_KEY or "",
+            _p(
+                LAWD_CD=region_code,
+                DEAL_YMD=year_month,
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )
 
     def commercial_trade_history(
         self,
@@ -55,12 +58,16 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """상업업무용·공장창고 매매 실거래가 — commercial/warehouse sales for one month."""
-        return self._call(_COMMERCIAL_SALES, config.PUBLIC_DATA_API_KEY or "", _p(
-            LAWD_CD=region_code,
-            DEAL_YMD=year_month,
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _COMMERCIAL_SALES,
+            config.PUBLIC_DATA_API_KEY or "",
+            _p(
+                LAWD_CD=region_code,
+                DEAL_YMD=year_month,
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )
 
     def building_permit_records(
         self,
@@ -70,13 +77,17 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """건축인허가 기본개요 — building permit records for a region and date range."""
-        return self._call(_PERMIT_HISTORY, config.PUBLIC_DATA_API_KEY or "", _p(
-            sigunguCd=region_code,
-            startDate=start_date,
-            endDate=end_date,
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _PERMIT_HISTORY,
+            config.PUBLIC_DATA_API_KEY or "",
+            _p(
+                sigunguCd=region_code,
+                startDate=start_date,
+                endDate=end_date,
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )
 
     def land_use_zoning(
         self,
@@ -85,12 +96,16 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """토지이용계획 — zoning and land-use classification for a region."""
-        return self._call(_ZONING, config.PUBLIC_DATA_API_KEY or "", _p(
-            pnu=region_code,
-            umdNm=dong,
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _ZONING,
+            config.PUBLIC_DATA_API_KEY or "",
+            _p(
+                pnu=region_code,
+                umdNm=dong,
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )
 
     def individual_land_price(
         self,
@@ -99,14 +114,17 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """개별공시지가 — government-appraised individual land price (NSDI; uses 'key' param)."""
-        return self._call_raw(_APPRAISED_VALUE, _p(
-            key=config.NSDI_API_KEY,
-            pnu=region_code,
-            stdrYear=str(year) if year else None,
-            numOfRows=num_rows,
-            pageNo=1,
-            format="json",
-        ))
+        return self._call_raw(
+            _APPRAISED_VALUE,
+            _p(
+                key=config.NSDI_API_KEY,
+                pnu=region_code,
+                stdrYear=str(year) if year else None,
+                numOfRows=num_rows,
+                pageNo=1,
+                format="json",
+            ),
+        )
 
     def standard_land_price(
         self,
@@ -115,12 +133,16 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """표준지공시지가 — publicly announced standard land price."""
-        return self._call(_STANDARD_PRICE, config.PUBLIC_DATA_API_KEY or "", _p(
-            sigunguCd=region_code,
-            stdrYear=str(year) if year else None,
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _STANDARD_PRICE,
+            config.PUBLIC_DATA_API_KEY or "",
+            _p(
+                sigunguCd=region_code,
+                stdrYear=str(year) if year else None,
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )
 
     def building_ledger(
         self,
@@ -132,16 +154,20 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """건축물대장 — building ledger for a parcel."""
-        return self._call(_BUILDING_REGISTRY, config.PUBLIC_DATA_API_KEY or "", _p(
-            sigunguCd=region_code,
-            bjdongCd=dong_code,
-            platGbCd="0",
-            bun=parcel_main,
-            ji=parcel_sub or "0",
-            ledgerType=ledger_type,
-            numOfRows=num_rows,
-            pageNo=1,
-        ))
+        return self._call(
+            _BUILDING_REGISTRY,
+            config.PUBLIC_DATA_API_KEY or "",
+            _p(
+                sigunguCd=region_code,
+                bjdongCd=dong_code,
+                platGbCd="0",
+                bun=parcel_main,
+                ji=parcel_sub or "0",
+                ledgerType=ledger_type,
+                numOfRows=num_rows,
+                pageNo=1,
+            ),
+        )
 
     def building_spatial_info(
         self,
