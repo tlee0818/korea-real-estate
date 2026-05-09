@@ -73,7 +73,8 @@ def _check_result_code(data: dict) -> None:
 class BaseHttpClient:
     """Shared retry/parse/error logic. Subclasses inject auth and base URL."""
 
-    def _get(self, url: str, params: dict[str, Any]) -> dict:
+    def _raw_get(self, url: str, params: dict[str, Any]) -> str:
+        """Execute GET with retry logic. Returns raw response text on success."""
         attempt = 0
         last_exc: Exception | None = None
 
@@ -91,9 +92,7 @@ class BaseHttpClient:
                     continue
 
                 resp.raise_for_status()
-                data = _parse_response(resp.text)
-                _check_result_code(data)
-                return data
+                return resp.text
 
             except (KoreaRealEstateError,):
                 raise
@@ -120,6 +119,12 @@ class BaseHttpClient:
             attempt += 1
 
         raise NetworkError(f"Network error: {last_exc}") from last_exc
+
+    def _get(self, url: str, params: dict[str, Any]) -> dict:
+        raw = self._raw_get(url, params)
+        data = _parse_response(raw)
+        _check_result_code(data)
+        return data
 
     async def _aget(self, url: str, params: dict[str, Any]) -> dict:
         attempt = 0
