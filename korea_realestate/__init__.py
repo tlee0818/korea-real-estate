@@ -1,10 +1,12 @@
 """Korea Real Estate API — Python client for Korean public real estate data."""
 
 from .clients import (
-    AppraisedValueClient,
-    PriceTrendsClient,
-    SalesHistoryClient,
-    ZoningClient,
+    KoreaRealEstateClient,
+    EventsClient,
+    LandClient,
+    BuildingClient,
+    MarketClient,
+    AddressClient,
 )
 from .exceptions import (
     APIKeyError,
@@ -17,10 +19,12 @@ from .exceptions import (
 __version__ = "0.1.0"
 
 __all__ = [
-    "SalesHistoryClient",
-    "PriceTrendsClient",
-    "AppraisedValueClient",
-    "ZoningClient",
+    "KoreaRealEstateClient",
+    "EventsClient",
+    "LandClient",
+    "BuildingClient",
+    "MarketClient",
+    "AddressClient",
     "KoreaRealEstateError",
     "APIKeyError",
     "RateLimitError",

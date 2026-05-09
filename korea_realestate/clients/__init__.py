@@ -1,11 +1,15 @@
-from .sales_history import SalesHistoryClient
-from .price_trends import PriceTrendsClient
-from .appraised_value import AppraisedValueClient
-from .zoning import ZoningClient
+from .master import KoreaRealEstateClient
+from .events import EventsClient
+from .land import LandClient
+from .building import BuildingClient
+from .market import MarketClient
+from .address import AddressClient
 
 __all__ = [
-    "SalesHistoryClient",
-    "PriceTrendsClient",
-    "AppraisedValueClient",
-    "ZoningClient",
+    "KoreaRealEstateClient",
+    "EventsClient",
+    "LandClient",
+    "BuildingClient",
+    "MarketClient",
+    "AddressClient",
 ]
