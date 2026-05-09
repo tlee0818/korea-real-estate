@@ -1,0 +1,51 @@
+name: Auto-version
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write  # needed to push version-bump commit back to main
+
+jobs:
+  semver:
+    name: Bump version from API signature diff
+    runs-on: ubuntu-latest
+    # Skip commits made by this workflow to avoid infinite loops
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use default GITHUB_TOKEN. If this workflow cannot push to your
+          # protected main branch, go to Settings → Branches → Edit protection
+          # rule → "Allow specified actors to bypass required pull requests"
+          # and add "github-actions[bot]". Alternatively replace with a PAT:
+          #   token: ${{ secrets.PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime dependencies
+        run: pip install httpx xmltodict python-dotenv click rich
+
+      - name: Determine and apply version bump
+        id: semver
+        run: |
+          NEW_VER=$(python scripts/semver.py)
+          echo "new_version=$NEW_VER" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml korea_realestate/__init__.py
+          if git diff --staged --quiet; then
+            echo "Version unchanged — nothing to commit"
+          else
+            git commit -m "chore: bump version to ${{ steps.semver.outputs.new_version }} [skip ci]"
+            git push
+          fi
