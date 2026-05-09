@@ -4,7 +4,7 @@ import httpx
 import pytest
 import respx
 
-from korea_realestate.exceptions import APIResponseError
+from korea_realestate.exceptions import KoreaRealEstateError
 from korea_realestate.http.juso import JusoClient
 from tests.conftest import ADDRESS_JSON
 
@@ -42,5 +42,5 @@ def test_address_lookup_passes_keyword():
 @respx.mock
 def test_raises_on_http_error():
     respx.get(_URL).mock(return_value=httpx.Response(500, text="error"))
-    with pytest.raises(APIResponseError):
+    with pytest.raises(KoreaRealEstateError):
         JusoClient().address_lookup(keyword="고성군")
