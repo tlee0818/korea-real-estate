@@ -2,33 +2,13 @@
 
 **한국 공공 부동산 데이터 Python 클라이언트**
 
-Python library and CLI for querying Korean government real estate data: land sales, building permits, price trend indices, appraised values, zoning, and address resolution.
+Thin Python HTTP client for Korean government real estate APIs. Returns raw parsed dicts — no transformation, no models.
 
 [![CI](https://github.com/tlee0818/korea-real-estate/actions/workflows/ci.yml/badge.svg)](https://github.com/tlee0818/korea-real-estate/actions/workflows/ci.yml)
 [![Lint](https://github.com/tlee0818/korea-real-estate/actions/workflows/lint.yml/badge.svg)](https://github.com/tlee0818/korea-real-estate/actions/workflows/lint.yml)
 [![PyPI](https://img.shields.io/pypi/v/korea-real-estate)](https://pypi.org/project/korea-real-estate/)
 [![Python](https://img.shields.io/pypi/pyversions/korea-real-estate)](https://pypi.org/project/korea-real-estate/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
----
-
-## Contents
-
-- [Installation](#installation)
-- [Getting API Keys](#getting-api-keys)
-- [Configuration](#configuration)
-- [Quick Start](#quick-start)
-- [Client Reference](#client-reference)
-  - [KoreaRealEstateClient (master)](#korearealestateclient-master)
-  - [EventsClient — historical transactions](#eventsclient--historical-transactions)
-  - [LandClient — parcel data](#landclient--parcel-data)
-  - [BuildingClient — building registry](#buildingclient--building-registry)
-  - [MarketClient — price trends](#marketclient--price-trends)
-  - [AddressClient — address resolution](#addressclient--address-resolution)
-- [Error Handling](#error-handling)
-- [CLI Reference](#cli-reference)
-- [Region Codes](#region-codes)
-- [API Reference Links](#api-reference-links)
 
 ---
 
@@ -42,28 +22,27 @@ Python 3.11+ required.
 
 ---
 
-## Getting API Keys
+## API Keys
 
-Each data source requires a separate key from the Korean government data portal.
+**You need one key per data source, not per endpoint.**
 
-1. Create an account at [www.data.go.kr](https://www.data.go.kr)
-2. Search for each API and click **활용신청** (Apply for use)
-3. Copy your **서비스키** from **마이페이지 → 오픈API 활용현황**
-
-| Env Var | API | Portal Link |
+| Source | Env Var | Covers |
 |---|---|---|
-| `SALES_HISTORY_API_KEY` | 토지 매매 실거래가 | [15126466](https://www.data.go.kr/data/15126466/openapi.do) |
-| `COMMERCIAL_SALES_API_KEY` | 상업용 부동산 매매 실거래가 | [15058017](https://www.data.go.kr/data/15058017/openapi.do) |
-| `BUILDING_PERMITS_API_KEY` | 건축인허가 정보 | [15044525](https://www.data.go.kr/data/15044525/openapi.do) |
-| `ZONING_API_KEY` | 토지이용계획 | [15113034](https://www.data.go.kr/data/15113034/openapi.do) |
-| `APPRAISED_VALUE_API_KEY` | 개별공시지가 (NSDI) | [15057159](https://www.data.go.kr/data/15057159/openapi.do) |
-| `STANDARD_LAND_PRICE_API_KEY` | 표준지공시지가 | [15056649](https://www.data.go.kr/data/15056649/openapi.do) |
-| `BUILDING_REGISTRY_API_KEY` | 건축물대장 | [15044521](https://www.data.go.kr/data/15044521/openapi.do) |
-| `BUILDING_MAP_API_KEY` | 건물 공간정보 | [15058453](https://www.data.go.kr/data/15058453/openapi.do) |
-| `PRICE_TRENDS_API_KEY` | 한국부동산원 통계 (REB) | [reb.or.kr](https://www.reb.or.kr/r-one/statistics/statisticsOpenapi.do) |
-| `ADDRESS_RESOLVER_API_KEY` | 주소 검색 (Juso) | [juso.go.kr](https://business.juso.go.kr/addrlink/openApi/apiExprn.do) |
+| [data.go.kr](https://www.data.go.kr) | `PUBLIC_DATA_API_KEY` | Land sales, commercial sales, permits, zoning, standard price, building ledger, building footprints |
+| [NSDI](https://www.data.go.kr/data/15057159/openapi.do) | `NSDI_API_KEY` | Individual appraised land price |
+| [REB (한국부동산원)](https://www.reb.or.kr/r-one/statistics/statisticsOpenapi.do) | `REB_API_KEY` | Real estate price index |
+| [Juso (도로명주소)](https://business.juso.go.kr/addrlink/openApi/apiExprn.do) | `JUSO_API_KEY` | Address resolution |
 
-> Keys from data.go.kr are URL-encoded. Use them as-is — do **not** re-encode.
+### Getting keys
+
+**data.go.kr** (covers 7 of the 9 endpoints):
+1. Create account at [data.go.kr](https://www.data.go.kr)
+2. Search for each API, click **활용신청** (Apply for use)
+3. Your single service key is in **마이페이지 → 오픈API 활용현황**
+
+> Keys from data.go.kr are URL-encoded. Use as-is — do **not** re-encode.
+
+**REB, NSDI, Juso** each have their own portals linked above.
 
 ---
 
@@ -76,33 +55,15 @@ cp .env.example .env
 `.env`:
 
 ```dotenv
-# Historical transactions
-SALES_HISTORY_API_KEY=your_key_here
-COMMERCIAL_SALES_API_KEY=your_key_here
-BUILDING_PERMITS_API_KEY=your_key_here
+PUBLIC_DATA_API_KEY=your_key_here   # data.go.kr — covers all public data endpoints
+NSDI_API_KEY=your_key_here          # individual appraised land price
+REB_API_KEY=your_key_here           # real estate price index
+JUSO_API_KEY=your_key_here          # address resolution
 
-# Land parcel
-ZONING_API_KEY=your_key_here
-APPRAISED_VALUE_API_KEY=your_key_here
-STANDARD_LAND_PRICE_API_KEY=your_key_here
-
-# Building
-BUILDING_REGISTRY_API_KEY=your_key_here
-BUILDING_MAP_API_KEY=your_key_here
-
-# Market trends (REB)
-PRICE_TRENDS_API_KEY=your_key_here
-
-# Address resolution (Juso)
-ADDRESS_RESOLVER_API_KEY=your_key_here
-
-# Defaults
 DEFAULT_REGION_CODE=42820
 REQUEST_TIMEOUT_SECONDS=30
 MAX_RETRIES=3
 ```
-
-Never commit `.env` — it is git-ignored.
 
 ---
 
@@ -113,43 +74,147 @@ from korea_realestate import KoreaRealEstateClient
 
 client = KoreaRealEstateClient()
 
-# Land sales last 6 months
-df = client.events.get_land_sales(region_code="42820", start_year_month="202410", end_year_month="202503")
+# Land sales — raw dict straight from the API
+data = client.public_data.land_trade_history(region_code="42820", year_month="202501")
 
-# Official appraised land value
-df = client.land.get_appraised_value(region_code="42820", year=2024)
-
-# Building registry
-df = client.building.get_registry(region_code="42820")
-
-# Market price trend
-df = client.market.get_price_trends(region_code="42820", index_type="land", start_year_month="202401", end_year_month="202412")
-
-# Resolve address
-result = client.address.resolve("강원도 고성군 대진리 123")
+# Navigate the response
+items = data["response"]["body"]["items"]["item"]
 ```
 
 ---
 
-## Client Reference
+## Client Structure
 
-### KoreaRealEstateClient (master)
-
-Single entry point. Instantiates and wires all domain clients with shared HTTP connections.
-
-```python
-from korea_realestate import KoreaRealEstateClient
-
-client = KoreaRealEstateClient()
-
-client.events    # EventsClient
-client.land      # LandClient
-client.building  # BuildingClient
-client.market    # MarketClient
-client.address   # AddressClient
+```
+KoreaRealEstateClient
+├── .public_data   PublicDataClient   apis.data.go.kr
+├── .reb           RebClient          reb.or.kr
+└── .juso          JusoClient         juso.go.kr
 ```
 
-For testing, inject mock HTTP clients:
+All methods return the raw parsed dict from the API (XML → dict via xmltodict, JSON → dict natively).
+
+---
+
+## `client.public_data` — PublicDataClient
+
+All endpoints use your single `PUBLIC_DATA_API_KEY`, except `individual_land_price` which uses `NSDI_API_KEY`.
+
+```python
+# Land sale transactions — one calendar month
+data = client.public_data.land_trade_history(
+    region_code="42820",
+    year_month="202501",       # YYYYMM
+    num_rows=1000,
+)
+
+# Commercial / warehouse / factory sales — one calendar month
+data = client.public_data.commercial_trade_history(
+    region_code="42820",
+    year_month="202501",
+    num_rows=1000,
+)
+
+# Building permit records
+data = client.public_data.building_permit_records(
+    region_code="42820",
+    start_date="20240101",     # YYYYMMDD, optional
+    end_date="20241231",       # YYYYMMDD, optional
+    num_rows=1000,
+)
+
+# Zoning and land-use classification
+data = client.public_data.land_use_zoning(
+    region_code="42820",
+    dong="대진리",             # subdivision filter, optional
+    num_rows=1000,
+)
+
+# Government-appraised individual land price (NSDI — uses NSDI_API_KEY)
+data = client.public_data.individual_land_price(
+    region_code="42820",
+    year=2024,                 # optional
+    num_rows=1000,
+)
+
+# Publicly announced standard land price
+data = client.public_data.standard_land_price(
+    region_code="42820",
+    year=2024,
+    num_rows=1000,
+)
+
+# Building ledger (건축물대장)
+data = client.public_data.building_ledger(
+    region_code="42820",
+    parcel_main="100",         # optional
+    parcel_sub="5",            # optional
+    ledger_type="표제부",      # 표제부 | 총괄표제부 | 층별개요 | 지역지구구역
+    num_rows=1000,
+)
+
+# Building footprints (GIS)
+data = client.public_data.building_spatial_info(
+    region_code="42820",
+    bbox=(127.0, 37.0, 128.0, 38.0),  # (minX, minY, maxX, maxY), optional
+    num_rows=1000,
+)
+```
+
+---
+
+## `client.reb` — RebClient
+
+```python
+# Real estate price index — land or housing (한국부동산원)
+data = client.reb.real_estate_price_index(
+    region_code="42820",
+    index_type="land",         # "land" or "housing"
+    start_year_month="202401", # YYYYMM, optional
+    end_year_month="202412",   # YYYYMM, optional
+    num_rows=500,
+)
+```
+
+---
+
+## `client.juso` — JusoClient
+
+```python
+# Resolve a Korean address string
+data = client.juso.address_lookup(
+    keyword="강원도 고성군 대진리 123",
+    count_per_page=10,
+    current_page=1,
+)
+
+# Results are under data["results"]["juso"]
+results = data["results"]["juso"]
+```
+
+---
+
+## Error Handling
+
+```python
+from korea_realestate.exceptions import (
+    APIKeyError,          # missing, invalid, or expired key
+    RateLimitError,       # daily call limit exceeded
+    RegionNotFoundError,  # no data for region/period
+    APIResponseError,     # unexpected HTTP or XML error
+)
+
+try:
+    data = client.public_data.land_trade_history(region_code="42820", year_month="202501")
+except APIKeyError as e:
+    print("Check your API key:", e)
+except RateLimitError:
+    print("Daily limit exceeded — try again tomorrow")
+```
+
+---
+
+## Injection for Testing
 
 ```python
 from unittest.mock import MagicMock
@@ -164,214 +229,21 @@ client = KoreaRealEstateClient(
 
 ---
 
-### EventsClient — historical transactions
-
-```python
-# Land sales
-df = client.events.get_land_sales(
-    region_code="42820",
-    start_year_month="202401",
-    end_year_month="202412",
-    land_category="임",   # optional: 임 | 전 | 답 | 대 | …
-    limit=50,             # most recent N rows
-)
-# columns: deal_date, region, dong, parcel, land_category, area_sqm,
-#          price_10k_won, price_per_sqm, zoning, buyer_type, cancelled
-
-# Commercial / factory / warehouse sales
-df = client.events.get_commercial_sales(
-    region_code="42820",
-    start_year_month="202401",
-    end_year_month="202412",
-    property_type="상업용",  # optional
-    limit=20,
-)
-# columns: deal_date, region, dong, building_use, land_area_sqm,
-#          building_area_sqm, floors, build_year, price_10k_won
-
-# Building permits
-df = client.events.get_permit_history(
-    region_code="42820",
-    start_date="20240101",
-    end_date="20241231",
-    permit_type="신축",   # optional: 신축 | 증축 | 대수선 | 철거
-    limit=10,
-)
-# columns: address, permit_type, main_use, site_area_sqm, building_area_sqm,
-#          floor_area_ratio, coverage_ratio, permit_date, start_date, completion_date
-```
-
----
-
-### LandClient — parcel data
-
-```python
-# Zoning classification
-df = client.land.get_zoning(region_code="42820", dong="대진리")
-# columns: region, dong, parcel, land_category, zoning_class, area_sqm
-
-# Official appraised land value (개별공시지가)
-df = client.land.get_appraised_value(region_code="42820", year=2024)
-# columns: region, dong, parcel, area_sqm, value_per_sqm, total_value, reference_year
-
-# Standard land price (표준지공시지가)
-df = client.land.get_standard_price(region_code="42820", year=2024)
-# columns: region, dong, parcel, land_category, area_sqm, price_per_sqm,
-#          reference_year, zoning, terrain, road_access
-
-# Full parcel profile (all sources combined)
-profile = client.land.get_full_profile(
-    region_code="42820",
-    history_limit=12,       # months of sales history
-    nearby_radius_m=500,    # optional: include nearby parcels snapshot
-)
-# profile["parcel"]["zoning"]          → DataFrame
-# profile["parcel"]["appraised_value"] → DataFrame
-# profile["parcel"]["standard_price"]  → DataFrame
-# profile["history"]["sales"]          → DataFrame
-# profile["nearby"]                    → list | None
-```
-
----
-
-### BuildingClient — building registry
-
-```python
-# Building registry (건축물대장)
-df = client.building.get_registry(
-    region_code="42820",
-    parcel_main="100",   # optional
-    parcel_sub="5",      # optional
-    ledger_type="표제부",  # 표제부 | 총괄표제부 | 층별개요 | 지역지구구역
-)
-# columns: address, building_name, main_use, structure,
-#          floors_above, total_area_sqm, …
-
-# Building map layer (GeoJSON)
-geojson = client.building.get_map_layer(region_code="42820")
-# geojson["type"] == "FeatureCollection"
-
-# Permit history (delegates to EventsClient)
-df = client.building.get_permit_history(
-    region_code="42820",
-    start_date="20240101",
-    end_date="20241231",
-)
-
-# Full building profile
-profile = client.building.get_full_profile(
-    region_code="42820",
-    history_limit=12,
-    nearby_radius_m=None,
-)
-# profile["building"]["registry"]   → DataFrame
-# profile["building"]["map_layer"]  → GeoJSON dict
-# profile["history"]["permits"]     → DataFrame
-# profile["nearby"]                 → list | None
-```
-
----
-
-### MarketClient — price trends
-
-```python
-# Land or housing price index (한국부동산원)
-df = client.market.get_price_trends(
-    region_code="42820",
-    index_type="land",          # "land" or "housing"
-    start_year_month="202401",
-    end_year_month="202412",
-    limit=12,
-)
-# columns: period, region, index_value, change_pct_mom, change_pct_yoy
-
-# Commercial property comparables (delegates to EventsClient)
-df = client.market.get_commercial_comps(
-    region_code="42820",
-    start_year_month="202401",
-    end_year_month="202412",
-)
-
-# Full market profile
-profile = client.market.get_full_profile(region_code="42820", history_limit=12)
-# profile["trends"]["land"]              → DataFrame
-# profile["trends"]["housing"]           → DataFrame
-# profile["history"]["commercial_sales"] → DataFrame
-```
-
----
-
-### AddressClient — address resolution
-
-```python
-# Resolve one address
-result = client.address.resolve("강원도 고성군 대진리 123")
-# result: {road_addr, jibun_addr, zip, region_code, x, y, …}
-
-# Batch resolve
-results = client.address.resolve_many(["주소1", "주소2"])
-
-# Get 5-digit 시군구 region code from address string
-code = client.address.to_region_code("고성군 대진리")  # → "42820"
-```
-
----
-
-## Error Handling
-
-```python
-from korea_realestate.exceptions import (
-    APIKeyError,          # missing, invalid, or expired key
-    RateLimitError,       # daily call limit exceeded
-    RegionNotFoundError,  # no data returned for region/period
-    APIResponseError,     # unexpected HTTP or XML error
-)
-
-try:
-    df = client.events.get_land_sales(region_code="42820", start_year_month="202401", end_year_month="202412")
-except APIKeyError as e:
-    print("Check your API key:", e)
-except RateLimitError:
-    print("Daily limit exceeded — try again tomorrow")
-except RegionNotFoundError:
-    print("No data for this region/period")
-except APIResponseError as e:
-    print("Unexpected API error:", e)
-```
-
----
-
-## CLI Reference
-
-Keys are read from `.env` automatically.
+## CLI
 
 ```bash
-# Land sales
-korea-realestate sales --region 42820 --from 202401 --to 202412 --land-category 임 --output sales.csv
-
-# Commercial / factory / warehouse sales
-korea-realestate commercial-sales --region 42820 --from 202401 --to 202412
-
-# Building permits
-korea-realestate permits --region 42820 --from 20240101 --to 20241231 --type 신축
-
-# Zoning lookup
-korea-realestate zoning --region 42820 --dong 대진리
-
-# Official appraised land value
+korea-realestate sales          --region 42820 --month 202501
+korea-realestate commercial-sales --region 42820 --month 202501
+korea-realestate permits        --region 42820 --from 20240101 --to 20241231
+korea-realestate zoning         --region 42820 --dong 대진리
 korea-realestate appraised-value --region 42820 --year 2024
-
-# Price trend index
-korea-realestate price-trends --region 42820 --type land --from 202401 --to 202412
-
-# Building registry
-korea-realestate building-registry --region 42820 --parcel 100-5
-
-# Resolve address
-korea-realestate resolve-address "강원도 고성군 대진리 123"
+korea-realestate standard-price  --region 42820 --year 2024
+korea-realestate building-ledger --region 42820 --parcel 100-5
+korea-realestate price-index    --region 42820 --type land --from 202401 --to 202412
+korea-realestate address-lookup "강원도 고성군 대진리 123"
 ```
 
-All commands accept `--output <file.csv>` to save results.
+All commands accept `--output <file.csv>`.
 
 ---
 
@@ -402,31 +274,12 @@ Tests use `respx` to mock HTTP — no real API keys needed.
 | 제주시 | 50110 | 서귀포시 | 50130 |
 | 세종시 | 36110 | 해운대구 | 21090 |
 
-Lookup helper:
-
 ```python
 from korea_realestate.utils import get_code
 
-code = get_code("고성군")  # → "42820"
-code = get_code("고성")    # → "42820" (fuzzy match)
+get_code("고성군")  # → "42820"
+get_code("고성")    # → "42820" (fuzzy match)
 ```
-
----
-
-## API Reference Links
-
-| API | Portal |
-|---|---|
-| Land Sales | [data.go.kr/15126466](https://www.data.go.kr/data/15126466/openapi.do) |
-| Commercial Sales | [data.go.kr/15058017](https://www.data.go.kr/data/15058017/openapi.do) |
-| Building Permits | [data.go.kr/15044525](https://www.data.go.kr/data/15044525/openapi.do) |
-| Zoning | [data.go.kr/15113034](https://www.data.go.kr/data/15113034/openapi.do) |
-| Appraised Value | [data.go.kr/15057159](https://www.data.go.kr/data/15057159/openapi.do) |
-| Standard Land Price | [data.go.kr/15056649](https://www.data.go.kr/data/15056649/openapi.do) |
-| Building Registry | [data.go.kr/15044521](https://www.data.go.kr/data/15044521/openapi.do) |
-| Building Map | [data.go.kr/15058453](https://www.data.go.kr/data/15058453/openapi.do) |
-| Price Trends (REB) | [reb.or.kr](https://www.reb.or.kr/r-one/statistics/statisticsOpenapi.do) |
-| Address (Juso) | [juso.go.kr](https://business.juso.go.kr/addrlink/openApi/apiExprn.do) |
 
 ---
 

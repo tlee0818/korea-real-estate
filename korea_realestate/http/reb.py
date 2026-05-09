@@ -25,7 +25,7 @@ class RebClient(BaseHttpClient):
     """
 
     def _call(self, path: str, params: dict) -> dict:
-        return self._get(_BASE + path, {"KEY": config.PRICE_TRENDS_API_KEY, **params})
+        return self._get(_BASE + path, {"KEY": config.REB_API_KEY, **params})
 
     def real_estate_price_index(
         self,

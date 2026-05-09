@@ -42,7 +42,7 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """토지 매매 실거래가 — land sale transactions for one calendar month."""
-        return self._call(_LAND_SALES, config.SALES_HISTORY_API_KEY or "", _p(
+        return self._call(_LAND_SALES, config.PUBLIC_DATA_API_KEY or "", _p(
             LAWD_CD=region_code,
             DEAL_YMD=year_month,
             numOfRows=num_rows,
@@ -56,7 +56,7 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """상업업무용·공장창고 매매 실거래가 — commercial/warehouse sales for one month."""
-        return self._call(_COMMERCIAL_SALES, config.COMMERCIAL_SALES_API_KEY or "", _p(
+        return self._call(_COMMERCIAL_SALES, config.PUBLIC_DATA_API_KEY or "", _p(
             LAWD_CD=region_code,
             DEAL_YMD=year_month,
             numOfRows=num_rows,
@@ -71,7 +71,7 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """건축인허가 기본개요 — building permit records for a region and date range."""
-        return self._call(_PERMIT_HISTORY, config.BUILDING_PERMITS_API_KEY or "", _p(
+        return self._call(_PERMIT_HISTORY, config.PUBLIC_DATA_API_KEY or "", _p(
             sigunguCd=region_code,
             startDate=start_date,
             endDate=end_date,
@@ -86,7 +86,7 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """토지이용계획 — zoning and land-use classification for a region."""
-        return self._call(_ZONING, config.ZONING_API_KEY or "", _p(
+        return self._call(_ZONING, config.PUBLIC_DATA_API_KEY or "", _p(
             pnu=region_code,
             umdNm=dong,
             numOfRows=num_rows,
@@ -101,7 +101,7 @@ class PublicDataClient(BaseHttpClient):
     ) -> dict:
         """개별공시지가 — government-appraised individual land price (NSDI; uses 'key' param)."""
         return self._call_raw(_APPRAISED_VALUE, _p(
-            key=config.APPRAISED_VALUE_API_KEY,
+            key=config.NSDI_API_KEY,
             pnu=region_code,
             stdrYear=str(year) if year else None,
             numOfRows=num_rows,
@@ -116,7 +116,7 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """표준지공시지가 — publicly announced standard land price."""
-        return self._call(_STANDARD_PRICE, config.STANDARD_LAND_PRICE_API_KEY or "", _p(
+        return self._call(_STANDARD_PRICE, config.PUBLIC_DATA_API_KEY or "", _p(
             sigunguCd=region_code,
             stdrYear=str(year) if year else None,
             numOfRows=num_rows,
@@ -133,7 +133,7 @@ class PublicDataClient(BaseHttpClient):
         num_rows: int = 1000,
     ) -> dict:
         """건축물대장 — building ledger for a parcel."""
-        return self._call(_BUILDING_REGISTRY, config.BUILDING_REGISTRY_API_KEY or "", _p(
+        return self._call(_BUILDING_REGISTRY, config.PUBLIC_DATA_API_KEY or "", _p(
             sigunguCd=region_code,
             bjdongCd=dong_code,
             platGbCd="0",
@@ -154,4 +154,4 @@ class PublicDataClient(BaseHttpClient):
         params: dict = _p(sigunguCd=region_code, numOfRows=num_rows, pageNo=1)
         if bbox:
             params["minX"], params["minY"], params["maxX"], params["maxY"] = bbox
-        return self._call(_BUILDING_MAP, config.BUILDING_MAP_API_KEY or "", params)
+        return self._call(_BUILDING_MAP, config.PUBLIC_DATA_API_KEY or "", params)

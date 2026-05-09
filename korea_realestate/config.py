@@ -9,35 +9,17 @@ def _get(key: str, default: str | None = None) -> str | None:
     return os.environ.get(key, default)
 
 
-def _require(key: str) -> str:
-    val = os.environ.get(key)
-    if not val or val == "your_key_here":
-        raise EnvironmentError(
-            f"Environment variable '{key}' is not set. "
-            f"Copy .env.example to .env and fill in your API keys from https://www.data.go.kr"
-        )
-    return val
+# data.go.kr — one key covers all public data portal endpoints
+PUBLIC_DATA_API_KEY: str | None = _get("PUBLIC_DATA_API_KEY")
 
+# NSDI (국가공간정보포털) — individual land price; uses 'key' param, separate portal
+NSDI_API_KEY: str | None = _get("NSDI_API_KEY")
 
-# EventsClient keys
-SALES_HISTORY_API_KEY: str | None = _get("SALES_HISTORY_API_KEY")
-COMMERCIAL_SALES_API_KEY: str | None = _get("COMMERCIAL_SALES_API_KEY")
-BUILDING_PERMITS_API_KEY: str | None = _get("BUILDING_PERMITS_API_KEY")
+# REB (한국부동산원) — real estate price index
+REB_API_KEY: str | None = _get("REB_API_KEY")
 
-# LandClient keys
-ZONING_API_KEY: str | None = _get("ZONING_API_KEY")
-APPRAISED_VALUE_API_KEY: str | None = _get("APPRAISED_VALUE_API_KEY")
-STANDARD_LAND_PRICE_API_KEY: str | None = _get("STANDARD_LAND_PRICE_API_KEY")
-
-# BuildingClient keys
-BUILDING_REGISTRY_API_KEY: str | None = _get("BUILDING_REGISTRY_API_KEY")
-BUILDING_MAP_API_KEY: str | None = _get("BUILDING_MAP_API_KEY")
-
-# MarketClient key
-PRICE_TRENDS_API_KEY: str | None = _get("PRICE_TRENDS_API_KEY")
-
-# AddressClient key
-ADDRESS_RESOLVER_API_KEY: str | None = _get("ADDRESS_RESOLVER_API_KEY")
+# Juso (도로명주소) — address resolution
+JUSO_API_KEY: str | None = _get("JUSO_API_KEY")
 
 # Shared defaults
 DEFAULT_REGION_CODE: str = _get("DEFAULT_REGION_CODE", "42820")

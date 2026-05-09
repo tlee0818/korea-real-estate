@@ -15,7 +15,7 @@ class JusoClient(BaseHttpClient):
 
     def _call(self, path: str, params: dict) -> dict:
         return self._get(_BASE + path, {
-            "confmKey": config.ADDRESS_RESOLVER_API_KEY,
+            "confmKey": config.JUSO_API_KEY,
             "resultType": "json",
             **{k: v for k, v in params.items() if v is not None},
         })
