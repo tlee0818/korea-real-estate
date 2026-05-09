@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    name: Build distribution
+    name: Auto-version and build distribution
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +21,11 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install build tools
-        run: pip install build
+      - name: Install build and runtime dependencies
+        run: pip install build httpx xmltodict python-dotenv click rich
+
+      - name: Auto-bump version from signature comparison
+        run: python scripts/semver.py
 
       - name: Build sdist and wheel
         run: python -m build
