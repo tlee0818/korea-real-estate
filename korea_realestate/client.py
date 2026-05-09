@@ -1,8 +1,8 @@
 """Korea Real Estate API — master client."""
 
+from .http.juso import JusoClient
 from .http.public_data import PublicDataClient
 from .http.reb import RebClient
-from .http.juso import JusoClient
 
 
 class KoreaRealEstateClient:

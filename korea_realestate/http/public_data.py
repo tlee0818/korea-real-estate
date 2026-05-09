@@ -1,6 +1,5 @@
 """HTTP client for https://apis.data.go.kr/ — one method per endpoint."""
 
-from typing import Optional
 
 from .. import config
 from .base_http_client import BaseHttpClient
@@ -66,8 +65,8 @@ class PublicDataClient(BaseHttpClient):
     def building_permit_records(
         self,
         region_code: str,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
         num_rows: int = 1000,
     ) -> dict:
         """건축인허가 기본개요 — building permit records for a region and date range."""
@@ -82,7 +81,7 @@ class PublicDataClient(BaseHttpClient):
     def land_use_zoning(
         self,
         region_code: str,
-        dong: Optional[str] = None,
+        dong: str | None = None,
         num_rows: int = 1000,
     ) -> dict:
         """토지이용계획 — zoning and land-use classification for a region."""
@@ -96,7 +95,7 @@ class PublicDataClient(BaseHttpClient):
     def individual_land_price(
         self,
         region_code: str,
-        year: Optional[int] = None,
+        year: int | None = None,
         num_rows: int = 1000,
     ) -> dict:
         """개별공시지가 — government-appraised individual land price (NSDI; uses 'key' param)."""
@@ -112,7 +111,7 @@ class PublicDataClient(BaseHttpClient):
     def standard_land_price(
         self,
         region_code: str,
-        year: Optional[int] = None,
+        year: int | None = None,
         num_rows: int = 1000,
     ) -> dict:
         """표준지공시지가 — publicly announced standard land price."""
@@ -126,9 +125,9 @@ class PublicDataClient(BaseHttpClient):
     def building_ledger(
         self,
         region_code: str,
-        dong_code: Optional[str] = None,
-        parcel_main: Optional[str] = None,
-        parcel_sub: Optional[str] = None,
+        dong_code: str | None = None,
+        parcel_main: str | None = None,
+        parcel_sub: str | None = None,
         ledger_type: str = "표제부",
         num_rows: int = 1000,
     ) -> dict:
@@ -147,7 +146,7 @@ class PublicDataClient(BaseHttpClient):
     def building_spatial_info(
         self,
         region_code: str,
-        bbox: Optional[tuple[float, float, float, float]] = None,
+        bbox: tuple[float, float, float, float] | None = None,
         num_rows: int = 1000,
     ) -> dict:
         """GIS 건물 도면 — building footprints for a region, optionally clipped to bbox."""

@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python3 -m pytest --tb=short -q)",
       "Bash(git commit -m ' *)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(python3 -m pip install ruff pyflakes -q)",
+      "Bash(ruff check *)",
+      "Bash(python3 -m pyflakes korea_realestate tests)"
     ]
   }
 }

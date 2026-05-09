@@ -1,13 +1,12 @@
 """Tests for RebClient."""
 
+import httpx
 import pytest
 import respx
-import httpx
 
+from korea_realestate.exceptions import APIKeyError, RateLimitError
 from korea_realestate.http.reb import RebClient
-from korea_realestate.exceptions import RateLimitError, APIKeyError
-
-from tests.conftest import TRENDS_XML, RATE_LIMIT_XML, INVALID_KEY_XML
+from tests.conftest import INVALID_KEY_XML, RATE_LIMIT_XML, TRENDS_XML
 
 _URL = "https://www.reb.or.kr/r-one/openapi/SttsApiTblData.do"
 

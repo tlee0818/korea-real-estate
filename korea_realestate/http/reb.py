@@ -1,6 +1,5 @@
 """HTTP client for https://www.reb.or.kr/r-one/openapi — one method per endpoint."""
 
-from typing import Optional
 
 from .. import config
 from .base_http_client import BaseHttpClient
@@ -31,8 +30,8 @@ class RebClient(BaseHttpClient):
         self,
         region_code: str,
         index_type: str = "land",
-        start_year_month: Optional[str] = None,
-        end_year_month: Optional[str] = None,
+        start_year_month: str | None = None,
+        end_year_month: str | None = None,
         num_rows: int = 500,
     ) -> dict:
         """

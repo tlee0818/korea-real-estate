@@ -1,12 +1,11 @@
 """Tests for JusoClient."""
 
+import httpx
 import pytest
 import respx
-import httpx
 
-from korea_realestate.http.juso import JusoClient
 from korea_realestate.exceptions import APIResponseError
-
+from korea_realestate.http.juso import JusoClient
 from tests.conftest import ADDRESS_JSON
 
 _URL = "https://business.juso.go.kr/addrlink/addrLinkApi.do"

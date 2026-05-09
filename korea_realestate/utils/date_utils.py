@@ -1,5 +1,5 @@
+from collections.abc import Iterator
 from datetime import date
-from typing import Iterator
 
 
 def to_year_month(value: str) -> str:

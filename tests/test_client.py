@@ -3,9 +3,9 @@
 from unittest.mock import MagicMock
 
 from korea_realestate.client import KoreaRealEstateClient
+from korea_realestate.http.juso import JusoClient
 from korea_realestate.http.public_data import PublicDataClient
 from korea_realestate.http.reb import RebClient
-from korea_realestate.http.juso import JusoClient
 
 
 def test_instantiates_without_error():
