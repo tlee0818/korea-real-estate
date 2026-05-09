@@ -1,5 +1,6 @@
 """CLI for the Korea Real Estate API client."""
 
+import json
 import sys
 from pathlib import Path
 
@@ -16,174 +17,168 @@ from korea_realestate.exceptions import KoreaRealEstateError
 console = Console()
 
 
+def _extract_items(data: dict) -> list[dict]:
+    body = data.get("response", {}).get("body", {}) or {}
+    items_node = body.get("items") or {}
+    if not isinstance(items_node, dict):
+        return []
+    item = items_node.get("item", [])
+    if isinstance(item, dict):
+        return [item]
+    return item or []
+
+
+def _print_items(items: list[dict], title: str, output: str | None = None) -> None:
+    if not items:
+        console.print(f"[yellow]No results for: {title}[/yellow]")
+        return
+
+    table = Table(title=title, show_lines=False, header_style="bold cyan")
+    for col in items[0]:
+        table.add_column(col, overflow="fold")
+    for row in items[:30]:
+        table.add_row(*[str(v) if v is not None else "" for v in row.values()])
+    console.print(table)
+
+    if len(items) > 30:
+        console.print(f"[dim]… {len(items) - 30} more rows (use --output to save all)[/dim]")
+
+    if output:
+        import csv
+        with open(output, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=items[0].keys())
+            writer.writeheader()
+            writer.writerows(items)
+        console.print(f"[green]Saved {len(items)} rows to {output}[/green]")
+
+
 @click.group()
-@click.version_option("0.1.0", prog_name="korea-realestate")
+@click.version_option("0.2.0", prog_name="korea-realestate")
 @click.pass_context
 def cli(ctx):
-    """Korea Real Estate API — land, buildings, market trends, events."""
+    """Korea Real Estate API — land, buildings, market trends."""
     ctx.ensure_object(dict)
     ctx.obj["client"] = KoreaRealEstateClient()
 
 
 @cli.command("sales")
-@click.option("--region", default=None, help="5-digit 시군구 code (default: DEFAULT_REGION_CODE in .env)")
-@click.option("--from", "from_ym", required=True, help="Start year-month (YYYY-MM or YYYYMM)")
-@click.option("--to", "to_ym", required=True, help="End year-month (YYYY-MM or YYYYMM)")
-@click.option("--land-category", default=None, help="Filter by land category (임, 전, 대, …)")
-@click.option("--limit", default=None, type=int, help="Most recent N results")
-@click.option("--output", default=None, help="Save results to this CSV file")
+@click.option("--region", default=None)
+@click.option("--month", required=True, help="Year-month YYYYMM")
+@click.option("--output", default=None)
 @click.pass_context
-def cmd_sales(ctx, region, from_ym, to_ym, land_category, limit, output):
-    """Query past land sale transactions."""
+def cmd_sales(ctx, region, month, output):
+    """Land sale transactions for one calendar month."""
     client: KoreaRealEstateClient = ctx.obj["client"]
     try:
-        df = client.events.get_land_sales(
+        data = client.public_data.land_trade_history(
             region_code=region or DEFAULT_REGION_CODE,
-            start_year_month=from_ym,
-            end_year_month=to_ym,
-            land_category=land_category,
-            limit=limit,
+            year_month=month,
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Land Sales — {region or DEFAULT_REGION_CODE}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
+    _print_items(_extract_items(data), title=f"Land Sales — {region or DEFAULT_REGION_CODE} {month}", output=output)
 
 
 @cli.command("commercial-sales")
-@click.option("--region", default=None, help="5-digit 시군구 code")
-@click.option("--from", "from_ym", required=True, help="Start year-month")
-@click.option("--to", "to_ym", required=True, help="End year-month")
-@click.option("--type", "property_type", default=None, help="상업용 | 공장 | 창고")
-@click.option("--limit", default=None, type=int, help="Most recent N results")
-@click.option("--output", default=None, help="Save results to CSV")
+@click.option("--region", default=None)
+@click.option("--month", required=True, help="Year-month YYYYMM")
+@click.option("--output", default=None)
 @click.pass_context
-def cmd_commercial_sales(ctx, region, from_ym, to_ym, property_type, limit, output):
-    """Query past commercial / warehouse / factory sales."""
+def cmd_commercial_sales(ctx, region, month, output):
+    """Commercial / warehouse / factory sales for one calendar month."""
     client: KoreaRealEstateClient = ctx.obj["client"]
     try:
-        df = client.events.get_commercial_sales(
+        data = client.public_data.commercial_trade_history(
             region_code=region or DEFAULT_REGION_CODE,
-            start_year_month=from_ym,
-            end_year_month=to_ym,
-            property_type=property_type,
-            limit=limit,
+            year_month=month,
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Commercial Sales — {region or DEFAULT_REGION_CODE}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
+    _print_items(_extract_items(data), title=f"Commercial Sales — {region or DEFAULT_REGION_CODE} {month}", output=output)
 
 
 @cli.command("permits")
-@click.option("--region", default=None, help="5-digit 시군구 code")
+@click.option("--region", default=None)
 @click.option("--from", "from_date", default=None, help="Start date YYYYMMDD")
 @click.option("--to", "to_date", default=None, help="End date YYYYMMDD")
-@click.option("--type", "permit_type", default=None, help="신축 | 증축 | 대수선 | 철거")
-@click.option("--limit", default=None, type=int, help="Most recent N results")
-@click.option("--output", default=None, help="Save results to CSV")
+@click.option("--output", default=None)
 @click.pass_context
-def cmd_permits(ctx, region, from_date, to_date, permit_type, limit, output):
-    """Query building permit history."""
+def cmd_permits(ctx, region, from_date, to_date, output):
+    """Building permit records for a region and date range."""
     client: KoreaRealEstateClient = ctx.obj["client"]
     try:
-        df = client.events.get_permit_history(
+        data = client.public_data.building_permit_records(
             region_code=region or DEFAULT_REGION_CODE,
             start_date=from_date,
             end_date=to_date,
-            permit_type=permit_type,
-            limit=limit,
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Permits — {region or DEFAULT_REGION_CODE}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
+    _print_items(_extract_items(data), title=f"Building Permits — {region or DEFAULT_REGION_CODE}", output=output)
 
 
 @cli.command("zoning")
-@click.option("--region", default=None, help="5-digit 시군구 code")
-@click.option("--dong", default=None, help="Subdivision (읍·면·동) name filter")
-@click.option("--output", default=None, help="Save results to CSV")
+@click.option("--region", default=None)
+@click.option("--dong", default=None)
+@click.option("--output", default=None)
 @click.pass_context
 def cmd_zoning(ctx, region, dong, output):
-    """Look up zoning and land use classification."""
+    """Zoning and land-use classification for a region."""
     client: KoreaRealEstateClient = ctx.obj["client"]
     try:
-        df = client.land.get_zoning(region_code=region or DEFAULT_REGION_CODE, dong=dong)
-    except KoreaRealEstateError as exc:
-        raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Zoning — {region or DEFAULT_REGION_CODE}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
-
-
-@cli.command("appraised-value")
-@click.option("--region", default=None, help="5-digit 시군구 code")
-@click.option("--year", type=int, default=None, help="Reference year (e.g. 2024)")
-@click.option("--output", default=None, help="Save results to CSV")
-@click.pass_context
-def cmd_appraised_value(ctx, region, year, output):
-    """Get official government-appraised land values."""
-    client: KoreaRealEstateClient = ctx.obj["client"]
-    try:
-        df = client.land.get_appraised_value(region_code=region or DEFAULT_REGION_CODE, year=year)
-    except KoreaRealEstateError as exc:
-        raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Appraised Value — {region or DEFAULT_REGION_CODE} {year or ''}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
-
-
-@cli.command("price-trends")
-@click.option("--region", default=None, help="5-digit 시군구 code")
-@click.option("--type", "index_type", default="land", show_default=True,
-              type=click.Choice(["land", "housing"]), help="Index type")
-@click.option("--from", "from_ym", required=True, help="Start year-month")
-@click.option("--to", "to_ym", required=True, help="End year-month")
-@click.option("--limit", default=None, type=int, help="Most recent N results")
-@click.option("--output", default=None, help="Save results to CSV")
-@click.pass_context
-def cmd_price_trends(ctx, region, index_type, from_ym, to_ym, limit, output):
-    """Get land or housing price trend index."""
-    client: KoreaRealEstateClient = ctx.obj["client"]
-    try:
-        df = client.market.get_price_trends(
+        data = client.public_data.land_use_zoning(
             region_code=region or DEFAULT_REGION_CODE,
-            index_type=index_type,
-            start_year_month=from_ym,
-            end_year_month=to_ym,
-            limit=limit,
+            dong=dong,
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Price Trends ({index_type}) — {region or DEFAULT_REGION_CODE}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
+    _print_items(_extract_items(data), title=f"Zoning — {region or DEFAULT_REGION_CODE}", output=output)
 
 
-@cli.command("building-registry")
-@click.option("--region", default=None, help="5-digit 시군구 code")
-@click.option("--parcel", default=None, help="Jibun parcel number (e.g. 100-5)")
-@click.option("--ledger-type", default="표제부", help="표제부 | 총괄표제부 | 층별개요 | 지역지구구역")
-@click.option("--output", default=None, help="Save results to CSV")
+@cli.command("appraised-value")
+@click.option("--region", default=None)
+@click.option("--year", type=int, default=None)
+@click.option("--output", default=None)
 @click.pass_context
-def cmd_building_registry(ctx, region, parcel, ledger_type, output):
-    """Look up building registry (건축물대장)."""
+def cmd_appraised_value(ctx, region, year, output):
+    """Government-appraised individual land prices."""
+    client: KoreaRealEstateClient = ctx.obj["client"]
+    try:
+        data = client.public_data.individual_land_price(
+            region_code=region or DEFAULT_REGION_CODE,
+            year=year,
+        )
+    except KoreaRealEstateError as exc:
+        raise click.ClickException(str(exc))
+    _print_items(_extract_items(data), title=f"Appraised Value — {region or DEFAULT_REGION_CODE}", output=output)
+
+
+@cli.command("standard-price")
+@click.option("--region", default=None)
+@click.option("--year", type=int, default=None)
+@click.option("--output", default=None)
+@click.pass_context
+def cmd_standard_price(ctx, region, year, output):
+    """Publicly announced standard land prices."""
+    client: KoreaRealEstateClient = ctx.obj["client"]
+    try:
+        data = client.public_data.standard_land_price(
+            region_code=region or DEFAULT_REGION_CODE,
+            year=year,
+        )
+    except KoreaRealEstateError as exc:
+        raise click.ClickException(str(exc))
+    _print_items(_extract_items(data), title=f"Standard Price — {region or DEFAULT_REGION_CODE}", output=output)
+
+
+@cli.command("building-ledger")
+@click.option("--region", default=None)
+@click.option("--parcel", default=None, help="Jibun parcel e.g. 100-5")
+@click.option("--ledger-type", default="표제부")
+@click.option("--output", default=None)
+@click.pass_context
+def cmd_building_ledger(ctx, region, parcel, ledger_type, output):
+    """Building ledger (건축물대장) for a parcel."""
     client: KoreaRealEstateClient = ctx.obj["client"]
     parcel_main, parcel_sub = None, None
     if parcel:
@@ -191,7 +186,7 @@ def cmd_building_registry(ctx, region, parcel, ledger_type, output):
         parcel_main = parts[0] if parts else None
         parcel_sub = parts[1] if len(parts) > 1 else "0"
     try:
-        df = client.building.get_registry(
+        data = client.public_data.building_ledger(
             region_code=region or DEFAULT_REGION_CODE,
             parcel_main=parcel_main,
             parcel_sub=parcel_sub,
@@ -199,43 +194,47 @@ def cmd_building_registry(ctx, region, parcel, ledger_type, output):
         )
     except KoreaRealEstateError as exc:
         raise click.ClickException(str(exc))
-
-    _print_df(df, title=f"Building Registry — {region or DEFAULT_REGION_CODE}")
-    if output:
-        df.to_csv(output, index=False)
-        console.print(f"[green]Saved {len(df)} rows to {output}[/green]")
+    _print_items(_extract_items(data), title=f"Building Ledger — {region or DEFAULT_REGION_CODE}", output=output)
 
 
-@cli.command("resolve-address")
-@click.argument("address")
+@cli.command("price-index")
+@click.option("--region", default=None)
+@click.option("--type", "index_type", default="land", type=click.Choice(["land", "housing"]))
+@click.option("--from", "from_ym", required=True, help="Start YYYYMM")
+@click.option("--to", "to_ym", required=True, help="End YYYYMM")
+@click.option("--output", default=None)
 @click.pass_context
-def cmd_resolve_address(ctx, address):
-    """Resolve a Korean address string to structured codes."""
+def cmd_price_index(ctx, region, index_type, from_ym, to_ym, output):
+    """Land or housing real estate price index (한국부동산원)."""
     client: KoreaRealEstateClient = ctx.obj["client"]
     try:
-        result = client.address.resolve(address)
+        data = client.reb.real_estate_price_index(
+            region_code=region or DEFAULT_REGION_CODE,
+            index_type=index_type,
+            start_year_month=from_ym,
+            end_year_month=to_ym,
+        )
+    except KoreaRealEstateError as exc:
+        raise click.ClickException(str(exc))
+    _print_items(_extract_items(data), title=f"Price Index ({index_type}) — {region or DEFAULT_REGION_CODE}", output=output)
+
+
+@cli.command("address-lookup")
+@click.argument("address")
+@click.pass_context
+def cmd_address_lookup(ctx, address):
+    """Resolve a Korean address string to structured road/jibun fields."""
+    client: KoreaRealEstateClient = ctx.obj["client"]
+    try:
+        data = client.juso.address_lookup(keyword=address)
     except Exception as exc:
         raise click.ClickException(str(exc))
-
-    for key, val in result.items():
-        console.print(f"  [cyan]{key}[/cyan]: {val}")
-
-
-def _print_df(df, title: str, max_rows: int = 30) -> None:
-    if df.empty:
-        console.print(f"[yellow]No results for: {title}[/yellow]")
+    results = data.get("results", {}).get("juso", []) or []
+    if not results:
+        console.print("[yellow]No results[/yellow]")
         return
-
-    table = Table(title=title, show_lines=False, header_style="bold cyan")
-    for col in df.columns:
-        table.add_column(col, overflow="fold")
-
-    for _, row in df.head(max_rows).iterrows():
-        table.add_row(*[str(v) if v is not None and str(v) != "nan" else "" for v in row])
-
-    console.print(table)
-    if len(df) > max_rows:
-        console.print(f"[dim]… {len(df) - max_rows} more rows (use --output to save all)[/dim]")
+    for entry in results:
+        console.print_json(json.dumps(entry, ensure_ascii=False))
 
 
 if __name__ == "__main__":

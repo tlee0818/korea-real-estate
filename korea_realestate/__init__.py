@@ -1,13 +1,9 @@
 """Korea Real Estate API — Python client for Korean public real estate data."""
 
-from .clients import (
-    KoreaRealEstateClient,
-    EventsClient,
-    LandClient,
-    BuildingClient,
-    MarketClient,
-    AddressClient,
-)
+from .client import KoreaRealEstateClient
+from .http.public_data import PublicDataClient
+from .http.reb import RebClient
+from .http.juso import JusoClient
 from .exceptions import (
     APIKeyError,
     APIResponseError,
@@ -16,15 +12,13 @@ from .exceptions import (
     RegionNotFoundError,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "KoreaRealEstateClient",
-    "EventsClient",
-    "LandClient",
-    "BuildingClient",
-    "MarketClient",
-    "AddressClient",
+    "PublicDataClient",
+    "RebClient",
+    "JusoClient",
     "KoreaRealEstateError",
     "APIKeyError",
     "RateLimitError",
