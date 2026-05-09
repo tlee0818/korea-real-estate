@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "korea-real-estate"
-version = "0.2.1"
+version = "0.3.0"
 description = "Python client for Korean public real estate APIs"
 readme = "README.md"
 license = "MIT"

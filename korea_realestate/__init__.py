@@ -17,7 +17,7 @@ from .http.juso import JusoClient
 from .http.public_data import PublicDataClient
 from .http.reb import RebClient
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 __all__ = [
     "KoreaRealEstateClient",
