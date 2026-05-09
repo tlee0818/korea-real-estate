@@ -2,13 +2,32 @@
 
 **한국 공공 부동산 데이터 Python 클라이언트**
 
-Thin Python HTTP client for Korean government real estate APIs. Returns raw parsed dicts — no transformation, no models.
+Thin Python HTTP client for Korean government real estate and property APIs. Returns raw parsed dicts — no transformation, no models.
 
 [![CI](https://github.com/tlee0818/korea-real-estate/actions/workflows/ci.yml/badge.svg)](https://github.com/tlee0818/korea-real-estate/actions/workflows/ci.yml)
 [![Lint](https://github.com/tlee0818/korea-real-estate/actions/workflows/lint.yml/badge.svg)](https://github.com/tlee0818/korea-real-estate/actions/workflows/lint.yml)
 [![PyPI](https://img.shields.io/pypi/v/korea-real-estate)](https://pypi.org/project/korea-real-estate/)
 [![Python](https://img.shields.io/pypi/pyversions/korea-real-estate)](https://pypi.org/project/korea-real-estate/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+---
+
+## What It Is
+
+This client wraps Korea's public real estate APIs into a single Python interface. It covers:
+
+- **Land & building transactions** — sale and lease prices by region and month
+- **Permits & zoning** — building permits, land-use classifications, zoning records
+- **Appraised & standard prices** — government-assessed and publicly announced land values
+- **REITs** — company listings, investment targets, fundraising, AMC records
+- **Onbid / KAMCO auctions** — property listings, bid results, regional statistics
+- **Government property** — national asset sales/lease, relocation property, reserve inventory
+- **Transit** — most-used transit routes by city
+- **Address resolution** — Korean road/jibun address lookup (도로명주소)
+- **Price index** — REB real estate price index (한국부동산원)
+- **Regional datasets** — municipal-level broker registries, tax records, land/permit records
+
+All methods return the raw API response as a Python dict (XML responses are parsed via `xmltodict`).
 
 ---
 
@@ -24,45 +43,23 @@ Python 3.11+ required.
 
 ## API Keys
 
-**You need one key per data source, not per endpoint.**
+You need **one key per data source**, not per endpoint.
 
-| Source | Env Var | Covers |
+| Source | Env Var | What It Covers |
 |---|---|---|
-| [data.go.kr](https://www.data.go.kr) | `PUBLIC_DATA_API_KEY` | Land sales, commercial sales, permits, zoning, standard price, building ledger, building footprints |
+| [data.go.kr](https://www.data.go.kr) | `PUBLIC_DATA_API_KEY` | Land/building/commercial transactions, permits, zoning, prices, REITs, Onbid, KAMCO, regional data |
 | [NSDI](https://www.data.go.kr/data/15057159/openapi.do) | `NSDI_API_KEY` | Individual appraised land price |
 | [REB (한국부동산원)](https://www.reb.or.kr/r-one/statistics/statisticsOpenapi.do) | `REB_API_KEY` | Real estate price index |
 | [Juso (도로명주소)](https://business.juso.go.kr/addrlink/openApi/apiExprn.do) | `JUSO_API_KEY` | Address resolution |
 
-### Getting keys
-
-**data.go.kr** (covers 7 of the 9 endpoints):
-1. Create account at [data.go.kr](https://www.data.go.kr)
-2. Search for each API, click **활용신청** (Apply for use)
-3. Your single service key is in **마이페이지 → 오픈API 활용현황**
-
-> Keys from data.go.kr are URL-encoded. Use as-is — do **not** re-encode.
-
-**REB, NSDI, Juso** each have their own portals linked above.
-
----
-
-## Configuration
-
-```bash
-cp .env.example .env
-```
+To get a `data.go.kr` key: create an account, search for an API, click **활용신청**, then find your key under **마이페이지 → 오픈API 활용현황**. The key covers all `data.go.kr` endpoints.
 
 `.env`:
-
 ```dotenv
-PUBLIC_DATA_API_KEY=your_key_here   # data.go.kr — covers all public data endpoints
-NSDI_API_KEY=your_key_here          # individual appraised land price
-REB_API_KEY=your_key_here           # real estate price index
-JUSO_API_KEY=your_key_here          # address resolution
-
-DEFAULT_REGION_CODE=42820
-REQUEST_TIMEOUT_SECONDS=30
-MAX_RETRIES=3
+PUBLIC_DATA_API_KEY=your_key_here
+NSDI_API_KEY=your_key_here
+REB_API_KEY=your_key_here
+JUSO_API_KEY=your_key_here
 ```
 
 ---
@@ -74,11 +71,26 @@ from korea_realestate import KoreaRealEstateClient
 
 client = KoreaRealEstateClient()
 
-# Land sales — raw dict straight from the API
+# Land sale transactions for one region and month
 data = client.public_data.land_trade_history(region_code="42820", year_month="202501")
 
-# Navigate the response
+# Navigate the raw response
 items = data["response"]["body"]["items"]["item"]
+
+# Apartment lease records
+data = client.public_data.apartment_rent_history(region_code="11230", year_month="202501")
+
+# Address lookup
+data = client.juso.address_lookup(keyword="강원도 고성군 대진리 123")
+results = data["results"]["juso"]
+
+# Real estate price index
+data = client.reb.real_estate_price_index(
+    region_code="42820",
+    index_type="land",
+    start_year_month="202401",
+    end_year_month="202412",
+)
 ```
 
 ---
@@ -87,110 +99,12 @@ items = data["response"]["body"]["items"]["item"]
 
 ```
 KoreaRealEstateClient
-├── .public_data   PublicDataClient   apis.data.go.kr
-├── .reb           RebClient          reb.or.kr
-└── .juso          JusoClient         juso.go.kr
+├── .public_data   PublicDataClient   ~67 methods — apis.data.go.kr
+├── .reb           RebClient          1 method   — reb.or.kr price index
+└── .juso          JusoClient         1 method   — juso.go.kr address API
 ```
 
-All methods return the raw parsed dict from the API (XML → dict via xmltodict, JSON → dict natively).
-
----
-
-## `client.public_data` — PublicDataClient
-
-All endpoints use your single `PUBLIC_DATA_API_KEY`, except `individual_land_price` which uses `NSDI_API_KEY`.
-
-```python
-# Land sale transactions — one calendar month
-data = client.public_data.land_trade_history(
-    region_code="42820",
-    year_month="202501",       # YYYYMM
-    num_rows=1000,
-)
-
-# Commercial / warehouse / factory sales — one calendar month
-data = client.public_data.commercial_trade_history(
-    region_code="42820",
-    year_month="202501",
-    num_rows=1000,
-)
-
-# Building permit records
-data = client.public_data.building_permit_records(
-    region_code="42820",
-    start_date="20240101",     # YYYYMMDD, optional
-    end_date="20241231",       # YYYYMMDD, optional
-    num_rows=1000,
-)
-
-# Zoning and land-use classification
-data = client.public_data.land_use_zoning(
-    region_code="42820",
-    dong="대진리",             # subdivision filter, optional
-    num_rows=1000,
-)
-
-# Government-appraised individual land price (NSDI — uses NSDI_API_KEY)
-data = client.public_data.individual_land_price(
-    region_code="42820",
-    year=2024,                 # optional
-    num_rows=1000,
-)
-
-# Publicly announced standard land price
-data = client.public_data.standard_land_price(
-    region_code="42820",
-    year=2024,
-    num_rows=1000,
-)
-
-# Building ledger (건축물대장)
-data = client.public_data.building_ledger(
-    region_code="42820",
-    parcel_main="100",         # optional
-    parcel_sub="5",            # optional
-    ledger_type="표제부",      # 표제부 | 총괄표제부 | 층별개요 | 지역지구구역
-    num_rows=1000,
-)
-
-# Building footprints (GIS)
-data = client.public_data.building_spatial_info(
-    region_code="42820",
-    bbox=(127.0, 37.0, 128.0, 38.0),  # (minX, minY, maxX, maxY), optional
-    num_rows=1000,
-)
-```
-
----
-
-## `client.reb` — RebClient
-
-```python
-# Real estate price index — land or housing (한국부동산원)
-data = client.reb.real_estate_price_index(
-    region_code="42820",
-    index_type="land",         # "land" or "housing"
-    start_year_month="202401", # YYYYMM, optional
-    end_year_month="202412",   # YYYYMM, optional
-    num_rows=500,
-)
-```
-
----
-
-## `client.juso` — JusoClient
-
-```python
-# Resolve a Korean address string
-data = client.juso.address_lookup(
-    keyword="강원도 고성군 대진리 123",
-    count_per_page=10,
-    current_page=1,
-)
-
-# Results are under data["results"]["juso"]
-results = data["results"]["juso"]
-```
+See [docs/](docs/) for the full method reference.
 
 ---
 
@@ -198,19 +112,36 @@ results = data["results"]["juso"]
 
 ```python
 from korea_realestate.exceptions import (
-    APIKeyError,          # missing, invalid, or expired key
-    RateLimitError,       # daily call limit exceeded
-    RegionNotFoundError,  # no data for region/period
-    APIResponseError,     # unexpected HTTP or XML error
+    APIKeyError,             # invalid, expired, or missing key
+    RateLimitError,          # daily call limit exceeded
+    InvalidParameterError,   # bad parameter value
+    MissingParameterError,   # required parameter absent
+    NoDataFoundError,        # no records for region/period
+    ServerSideError,         # API server-side error
+    NetworkError,            # connection timeout or unreachable host
+    APIResponseError,        # unexpected HTTP or parse error
 )
-
-try:
-    data = client.public_data.land_trade_history(region_code="42820", year_month="202501")
-except APIKeyError as e:
-    print("Check your API key:", e)
-except RateLimitError:
-    print("Daily limit exceeded — try again tomorrow")
 ```
+
+All exceptions inherit from `KoreaRealEstateError`. See [docs/errors.md](docs/errors.md).
+
+---
+
+## CLI
+
+```bash
+korea-realestate sales          --region 42820 --month 202501
+korea-realestate commercial-sales --region 42820 --month 202501
+korea-realestate permits        --region 42820 --from 20240101 --to 20241231
+korea-realestate zoning         --region 42820
+korea-realestate appraised-value --region 42820 --year 2024
+korea-realestate standard-price  --region 42820 --year 2024
+korea-realestate building-ledger --region 42820 --parcel 100-5
+korea-realestate price-index    --region 42820 --type land --from 202401 --to 202412
+korea-realestate address-lookup "강원도 고성군 대진리 123"
+```
+
+All commands support `--output <file.csv>`. See [docs/cli.md](docs/cli.md).
 
 ---
 
@@ -218,6 +149,7 @@ except RateLimitError:
 
 ```python
 from unittest.mock import MagicMock
+from korea_realestate import KoreaRealEstateClient
 from korea_realestate.http import PublicDataClient, RebClient, JusoClient
 
 client = KoreaRealEstateClient(
@@ -229,57 +161,13 @@ client = KoreaRealEstateClient(
 
 ---
 
-## CLI
+## Docs
 
-```bash
-korea-realestate sales          --region 42820 --month 202501
-korea-realestate commercial-sales --region 42820 --month 202501
-korea-realestate permits        --region 42820 --from 20240101 --to 20241231
-korea-realestate zoning         --region 42820 --dong 대진리
-korea-realestate appraised-value --region 42820 --year 2024
-korea-realestate standard-price  --region 42820 --year 2024
-korea-realestate building-ledger --region 42820 --parcel 100-5
-korea-realestate price-index    --region 42820 --type land --from 202401 --to 202412
-korea-realestate address-lookup "강원도 고성군 대진리 123"
-```
-
-All commands accept `--output <file.csv>`.
-
----
-
-## Running Tests
-
-```bash
-pip install "korea-real-estate[dev]"
-pytest
-```
-
-Tests use `respx` to mock HTTP — no real API keys needed.
-
----
-
-## Region Codes
-
-5-digit 시군구 codes (법정동코드 앞 5자리).
-
-| Region | Code | Region | Code |
-|---|---|---|---|
-| 고성군 (강원) | 42820 | 속초시 | 42210 |
-| 양양군 | 42830 | 인제군 | 42810 |
-| 춘천시 | 42110 | 원주시 | 42130 |
-| 강릉시 | 42150 | 동해시 | 42170 |
-| 강남구 | 11230 | 서초구 | 11220 |
-| 송파구 | 11240 | 용산구 | 11030 |
-| 수원시영통구 | 41117 | 성남시분당구 | 41135 |
-| 제주시 | 50110 | 서귀포시 | 50130 |
-| 세종시 | 36110 | 해운대구 | 21090 |
-
-```python
-from korea_realestate.utils import get_code
-
-get_code("고성군")  # → "42820"
-get_code("고성")    # → "42820" (fuzzy match)
-```
+- [Public Data API methods](docs/public_data.md)
+- [REB price index](docs/reb.md)
+- [Juso address API](docs/juso.md)
+- [Error types](docs/errors.md)
+- [CLI reference](docs/cli.md)
 
 ---
 
